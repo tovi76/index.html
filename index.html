@@ -1,146 +1,119 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-<meta charset="UTF-8">
-<title>טופס בחירת שם, כיתה ואירוע</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    direction: rtl;
-    margin: 20px;
-    background-color: #f5f5f5;
-  }
-  form {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 400px;
-  }
-  label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  input, button {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    box-sizing: border-box;
-  }
-  button {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 15px;
-  }
-  button:hover {
-    background: #45a049;
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>טופס בחירה</title>
+    <style>
+        body { font-family: Arial, sans-serif; direction: rtl; }
+        label { display: block; margin-top: 10px; }
+        select, button { padding: 5px; margin-top: 5px; }
+    </style>
 </head>
 <body>
+    <h1>טופס בחירה</h1>
 
-<h2>טופס שליחת נתונים</h2>
+    <label>שם תלמיד:
+        <select id="studentSelect">
+            <option value="">בחר תלמיד</option>
+        </select>
+    </label>
 
-<form id="myForm">
-  <label for="name">שם:</label>
-  <input list="nameList" id="name" name="name" placeholder="בחר שם...">
-  <datalist id="nameList"></datalist>
+    <label>כיתה:
+        <input type="text" id="classInput" readonly>
+    </label>
 
-  <label for="class">כיתה:</label>
-  <input type="text" id="class" name="class" readonly placeholder="הכיתה תופיע כאן">
+    <label>אירוע:
+        <select id="eventSelect">
+            <option value="">בחר אירוע</option>
+        </select>
+    </label>
 
-  <label for="event">האירוע:</label>
-  <input list="eventList" id="event" name="event" placeholder="בחר אירוע...">
-  <datalist id="eventList"></datalist>
+    <button id="submitBtn">שלח</button>
 
-  <button type="submit">שלח</button>
-</form>
+    <p id="status"></p>
 
-<script>
-// מזהה הגיליון שלך
-const sheetId = "14tuI-XR1uSI6_NKlVJCSitgrBN8ItKB_kl4b3KwWwp4";
+    <script>
+        const sheetId = "14tuI-XR1uSI6_NKlVJCSitgrBN8ItKB_kl4b3KwWwp4";
+        const studentUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Data`;
+        const eventsUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Events`;
 
-// --- גיליון השמות והכיתות ---
-const namesSheet = "Data"; // שנה לשם המדויק
-const urlNames = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${namesSheet}`;
-let dataRows = [];
+        const studentSelect = document.getElementById("studentSelect");
+        const classInput = document.getElementById("classInput");
+        const eventSelect = document.getElementById("eventSelect");
+        const statusP = document.getElementById("status");
 
-// --- גיליון האירועים ---
-const eventsSheet = "Events"; // שנה לשם המדויק
-const urlEvents = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${eventsSheet}`;
-let eventRows = [];
+        // טעינת רשימת תלמידים
+        fetch(studentUrl)
+            .then(res => res.text())
+            .then(text => {
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                const rows = json.table.rows;
+                rows.forEach(row => {
+                    const name = row.c[0]?.v || "";
+                    const className = row.c[1]?.v || "";
+                    if (name) {
+                        const option = document.createElement("option");
+                        option.value = className;
+                        option.textContent = name;
+                        studentSelect.appendChild(option);
+                    }
+                });
+            })
+            .catch(err => {
+                statusP.textContent = "שגיאה בטעינת תלמידים: " + err;
+            });
 
-// קריאת שמות וכיתות
-fetch(urlNames)
-  .then(res => res.text())
-  .then(data => {
-    const json = JSON.parse(data.substr(47).slice(0, -2));
-    dataRows = json.table.rows;
-    const nameList = document.getElementById("nameList");
-    dataRows.forEach(row => {
-      if (row.c[0] && row.c[0].v) {
-        let option = document.createElement("option");
-        option.value = row.c[0].v; // שם בעמודה A
-        nameList.appendChild(option);
-      }
-    });
-  });
+        // טעינת רשימת אירועים
+        fetch(eventsUrl)
+            .then(res => res.text())
+            .then(text => {
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                const rows = json.table.rows;
+                rows.forEach(row => {
+                    const eventName = row.c[0]?.v || "";
+                    if (eventName) {
+                        const option = document.createElement("option");
+                        option.textContent = eventName;
+                        eventSelect.appendChild(option);
+                    }
+                });
+            })
+            .catch(err => {
+                statusP.textContent = "שגיאה בטעינת אירועים: " + err;
+            });
 
-// קריאת אירועים
-fetch(urlEvents)
-  .then(res => res.text())
-  .then(data => {
-    const json = JSON.parse(data.substr(47).slice(0, -2));
-    eventRows = json.table.rows;
-    const eventList = document.getElementById("eventList");
-    eventRows.forEach((row, index) => {
-      if (index > 0 && row.c[0] && row.c[0].v) { // דילוג על הכותרת
-        let option = document.createElement("option");
-        option.value = row.c[0].v;
-        eventList.appendChild(option);
-      }
-    });
-  });
+        // בעת בחירת תלמיד
+        studentSelect.addEventListener("change", () => {
+            classInput.value = studentSelect.value || "";
+        });
 
-// בחירת שם → מילוי כיתה
-document.getElementById("name").addEventListener("input", function() {
-    const selectedName = this.value.trim();
-    const row = dataRows.find(r => r.c[0] && r.c[0].v.trim() === selectedName);
-    if (row) {
-        document.getElementById("class").value = row.c[1]?.v || "";
-    } else {
-        document.getElementById("class").value = "";
-    }
-});
+        // שליחת וובהוק
+        document.getElementById("submitBtn").addEventListener("click", () => {
+            const selectedStudent = studentSelect.options[studentSelect.selectedIndex].text;
+            const selectedClass = classInput.value;
+            const selectedEvent = eventSelect.value;
 
-// שליחת הטופס לוובהוק
-document.getElementById("myForm").addEventListener("submit", function(e) {
-    e.preventDefault(); // מניעת שליחה רגילה
-    const payload = {
-        name: document.getElementById("name").value,
-        class: document.getElementById("class").value,
-        event: document.getElementById("event").value
-    };
+            if (!selectedStudent || !selectedClass || !selectedEvent) {
+                statusP.textContent = "יש למלא את כל השדות.";
+                return;
+            }
 
-    fetch("https://your-webhook-url.com", { // החלף בכתובת הוובהוק שלך
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.text())
-    .then(response => {
-        alert("הטופס נשלח בהצלחה!");
-        console.log("Webhook Response:", response);
-    })
-    .catch(err => {
-        alert("שגיאה בשליחה!");
-        console.error(err);
-    });
-});
-</script>
-
+            fetch("YOUR_WEBHOOK_URL", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    student: selectedStudent,
+                    class: selectedClass,
+                    event: selectedEvent
+                })
+            })
+            .then(() => {
+                statusP.textContent = "הטופס נשלח בהצלחה!";
+            })
+            .catch(err => {
+                statusP.textContent = "שגיאה בשליחה: " + err;
+            });
+        });
+    </script>
 </body>
 </html>
