@@ -3,13 +3,13 @@
 const sheetId = "14tuI-XR1uSI6_NKlVJCSitgrBN8ItKB_kl4b3KwWwp4";
 
 // --- גיליון השמות והכיתות ---
-const namesSheet = "Students"; // שנה לשם המדויק
-const urlNames = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${Data}`;
+const namesSheet = "Data"; // שנה לשם המדויק
+const urlNames = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${namesSheet}`;
 let dataRows = [];
 
 // --- גיליון האירועים ---
 const eventsSheet = "Events"; // שנה לשם המדויק
-const urlEvents = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${Events}`;
+const urlEvents = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${eventsSheet}`;
 let eventRows = [];
 
 // קריאת שמות וכיתות
@@ -34,10 +34,14 @@ fetch(urlEvents)
   .then(data => {
     const json = JSON.parse(data.substr(47).slice(0, -2));
     eventRows = json.table.rows;
-    // נניח שהאירועים מתחילים בשורה 2
-    if (eventRows.length > 1) {
-      document.getElementById("event").value = eventRows[1].c[0]?.v || "";
-    }
+    const eventList = document.getElementById("eventList");
+    eventRows.forEach((row, index) => {
+      if (index > 0 && row.c[0] && row.c[0].v) { // דילוג על הכותרת
+        let option = document.createElement("option");
+        option.value = row.c[0].v;
+        eventList.appendChild(option);
+      }
+    });
   });
 
 // בחירת שם → מילוי כיתה
@@ -49,5 +53,30 @@ document.getElementById("name").addEventListener("input", function() {
     } else {
         document.getElementById("class").value = "";
     }
+});
+
+// שליחת הטופס לוובהוק
+document.querySelector("form").addEventListener("submit", function(e) {
+    e.preventDefault(); // מניעת שליחה רגילה
+    const payload = {
+        name: document.getElementById("name").value,
+        class: document.getElementById("class").value,
+        event: document.getElementById("event").value
+    };
+
+    fetch("https://your-webhook-url.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.text())
+    .then(response => {
+        alert("הטופס נשלח בהצלחה!");
+        console.log(response);
+    })
+    .catch(err => {
+        alert("שגיאה בשליחה!");
+        console.error(err);
+    });
 });
 </script>
