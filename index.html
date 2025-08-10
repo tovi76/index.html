@@ -1,5 +1,66 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<title>טופס בחירת שם, כיתה ואירוע</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    margin: 20px;
+    background-color: #f5f5f5;
+  }
+  form {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+  }
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  input, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+  }
+  button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+  }
+  button:hover {
+    background: #45a049;
+  }
+</style>
+</head>
+<body>
+
+<h2>טופס שליחת נתונים</h2>
+
+<form id="myForm">
+  <label for="name">שם:</label>
+  <input list="nameList" id="name" name="name" placeholder="בחר שם...">
+  <datalist id="nameList"></datalist>
+
+  <label for="class">כיתה:</label>
+  <input type="text" id="class" name="class" readonly placeholder="הכיתה תופיע כאן">
+
+  <label for="event">האירוע:</label>
+  <input list="eventList" id="event" name="event" placeholder="בחר אירוע...">
+  <datalist id="eventList"></datalist>
+
+  <button type="submit">שלח</button>
+</form>
+
 <script>
-// מזהה הגיליון
+// מזהה הגיליון שלך
 const sheetId = "14tuI-XR1uSI6_NKlVJCSitgrBN8ItKB_kl4b3KwWwp4";
 
 // --- גיליון השמות והכיתות ---
@@ -56,7 +117,7 @@ document.getElementById("name").addEventListener("input", function() {
 });
 
 // שליחת הטופס לוובהוק
-document.querySelector("form").addEventListener("submit", function(e) {
+document.getElementById("myForm").addEventListener("submit", function(e) {
     e.preventDefault(); // מניעת שליחה רגילה
     const payload = {
         name: document.getElementById("name").value,
@@ -64,7 +125,7 @@ document.querySelector("form").addEventListener("submit", function(e) {
         event: document.getElementById("event").value
     };
 
-    fetch("https://your-webhook-url.com", {
+    fetch("https://your-webhook-url.com", { // החלף בכתובת הוובהוק שלך
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -72,7 +133,7 @@ document.querySelector("form").addEventListener("submit", function(e) {
     .then(res => res.text())
     .then(response => {
         alert("הטופס נשלח בהצלחה!");
-        console.log(response);
+        console.log("Webhook Response:", response);
     })
     .catch(err => {
         alert("שגיאה בשליחה!");
@@ -80,3 +141,6 @@ document.querySelector("form").addEventListener("submit", function(e) {
     });
 });
 </script>
+
+</body>
+</html>
